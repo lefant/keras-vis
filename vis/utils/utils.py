@@ -15,6 +15,8 @@ except ImportError:
 from skimage import io
 from collections import Iterable
 from keras import backend as K
+from keras.utils.data_utils import get_file
+from keras.utils.imagenet_utils import CLASS_INDEX_PATH
 
 
 # Globals
@@ -187,7 +189,10 @@ def get_imagenet_label(indices, join=', '):
     """
     global _CLASS_INDEX
     if _CLASS_INDEX is None:
-        with open(os.path.join(os.path.dirname(__file__), '../../resources/imagenet_class_index.json')) as f:
+        fpath = get_file('imagenet_class_index.json',
+                         CLASS_INDEX_PATH,
+                         cache_subdir='models')
+        with open(fpath) as f:
             _CLASS_INDEX = json.load(f)
 
     indices = listify(indices)
