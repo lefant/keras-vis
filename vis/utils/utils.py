@@ -15,8 +15,8 @@ except ImportError:
 from skimage import io
 from collections import Iterable
 from keras import backend as K
+from keras.applications.imagenet_utils import CLASS_INDEX_PATH
 from keras.utils.data_utils import get_file
-from keras.utils.imagenet_utils import CLASS_INDEX_PATH
 
 
 # Globals
