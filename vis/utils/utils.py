@@ -7,6 +7,11 @@ import json
 import cv2
 import itertools
 
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
+
 from skimage import io
 from collections import Iterable
 from keras import backend as K
@@ -28,7 +33,7 @@ def set_random_seed(seed_value=1337):
 def reverse_enumerate(iterable):
     """Enumerate over an iterable in reverse order while retaining proper indexes, without creating any copies.
     """
-    return itertools.izip(reversed(range(len(iterable))), reversed(iterable))
+    return izip(reversed(range(len(iterable))), reversed(iterable))
 
 
 def listify(value):
