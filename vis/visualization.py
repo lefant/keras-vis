@@ -150,7 +150,8 @@ def visualize_saliency(model, layer_idx, filter_indices,
         (ActivationMaximization(model.layers[layer_idx], filter_indices), 1)
     ]
     opt = Optimizer(model.input, losses)
-    grads = opt.minimize(max_iter=1, verbose=False, jitter=0, seed_img=seed_img)[1]
+    # grads = opt.minimize(max_iter=1, verbose=False, jitter=0, seed_img=seed_img)[1]
+    grads = opt.minimize(max_iter=1, verbose=False, seed_img=seed_img)[1]
 
     # We are minimizing loss as opposed to maximizing output as with the paper.
     # So, negative gradients here mean that they reduce loss, maximizing class probability.
@@ -161,7 +162,7 @@ def visualize_saliency(model, layer_idx, filter_indices,
 
     # Smoothen activation map
     grads = utils.deprocess_image(grads[0])
-    grads /= np.max(grads)
+    # grads /= np.max(grads)
 
     # Convert to heatmap and zero out low probabilities for a cleaner output.
     heatmap = cv2.applyColorMap(cv2.GaussianBlur(grads * 255, (3, 3), 0), cv2.COLORMAP_JET)
@@ -174,9 +175,8 @@ def visualize_saliency(model, layer_idx, filter_indices,
     return heatmap
 
 
-def visualize_cam(model, layer_idx, filter_indices,
-                  seed_img, penultimate_layer_idx=None,
-                  text=None, overlay=True):
+def visualize_cam(model, layer, penultimate_layer, filter_indices,
+                  seed_img, text=None, overlay=True):
     """Generates a gradient based class activation map (CAM) as described in paper
     [Grad-CAM: Why did you say that? Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/pdf/1610.02391v1.pdf).
     Unlike [class activation mapping](https://arxiv.org/pdf/1512.04150v1.pdf), which requires minor changes to
@@ -220,23 +220,26 @@ def visualize_cam(model, layer_idx, filter_indices,
     filter_indices = utils.listify(filter_indices)
     print("Working on filters: {}".format(pprint.pformat(filter_indices)))
 
-    # Search for the nearest penultimate `Convolutional` or `Pooling` layer.
-    if penultimate_layer_idx is None:
-        for idx, layer in utils.reverse_enumerate(model.layers[:layer_idx-1]):
-            if isinstance(layer, (Convolution2D, _Pooling2D)):
-                penultimate_layer_idx = idx
-                break
+    # # Search for the nearest penultimate `Convolutional` or `Pooling` layer.
+    # if penultimate_layer_idx is None:
+    #     for idx, layer in utils.reverse_enumerate(model.layers[:layer_idx-1]):
+    #         if isinstance(layer, (Convolution2D, _Pooling2D)):
+    #             penultimate_layer_idx = idx
+    #             break
 
-    if penultimate_layer_idx is None:
-        raise ValueError('Unable to determine penultimate `Convolution2D` or `Pooling2D` '
-                         'layer for layer_idx: {}'.format(layer_idx))
-    assert penultimate_layer_idx < layer_idx
+    # if penultimate_layer_idx is None:
+    #     raise ValueError('Unable to determine penultimate `Convolution2D` or `Pooling2D` '
+    #                      'layer for layer_idx: {}'.format(layer_idx))
+    # assert penultimate_layer_idx < layer_idx
+
+    # ultimate_layer = model.layers[layer_idx]
+    # penultimate_layer = model.layers[penultimate_layer_idx]
 
     losses = [
-        (ActivationMaximization(model.layers[layer_idx], filter_indices), 1)
+        (ActivationMaximization(ultimate_layer, filter_indices), 1)
     ]
 
-    penultimate_output = model.layers[penultimate_layer_idx].output
+    penultimate_output = penultimate_layer.output
     opt = Optimizer(model.input, losses, wrt=penultimate_output)
     _, grads, penultimate_output_value = opt.minimize(seed_img, max_iter=1, verbose=False)
 
